@@ -3,6 +3,7 @@ package notebook.view;
 import notebook.controller.UserController;
 import notebook.model.User;
 import notebook.util.Commands;
+import notebook.util.UserValidator;
 
 import java.util.Scanner;
 
@@ -13,11 +14,11 @@ public class UserView {
         this.userController = userController;
     }
 
-    public void run(){
+    public void run() {
         Commands com;
-
+        String userId;
         while (true) {
-            String command = prompt("Введите команду: ");
+            String command = prompt("Введите команду: ").toUpperCase();
             com = Commands.valueOf(command);
             if (com == Commands.EXIT) return;
             switch (com) {
@@ -26,32 +27,46 @@ public class UserView {
                     userController.saveUser(u);
                     break;
                 case READ:
-                    String id = prompt("Идентификатор пользователя: ");
+                    userId = prompt("Идентификатор пользователя: ");
                     try {
-                        User user = userController.readUser(Long.parseLong(id));
+                        User user = userController.readUser(Long.parseLong(userId));
                         System.out.println(user);
                         System.out.println();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                     break;
+                case LIST:
+                    System.out.println(userController.findAll());
+                    break;
                 case UPDATE:
-                    String userId = prompt("Enter user id: ");
+                    userId = prompt("Введтите Id: ");
                     userController.updateUser(userId, createUser());
+                    break;
+                case DELETE:
+                    userId = prompt("Dведите Id: ");
+                    if (userController.delete(Long.parseLong(userId))) {
+                        System.out.println("Пользователь удален");
+                    } else {
+                        System.out.println("Пользователь не найден");
+                    }
+                    break;
             }
         }
+    }
+
+    public User createUser() {
+        String firstName = prompt("Имя: ");
+        String lastName = prompt("Фамилия: ");
+        String phone = prompt("Номер телефона: ");
+
+        UserValidator validator = new UserValidator();
+        return validator.validate(new User(firstName, lastName, phone));
     }
 
     private String prompt(String message) {
         Scanner in = new Scanner(System.in);
         System.out.print(message);
         return in.nextLine();
-    }
-
-    private User createUser() {
-        String firstName = prompt("Имя: ");
-        String lastName = prompt("Фамилия: ");
-        String phone = prompt("Номер телефона: ");
-        return new User(firstName, lastName, phone);
     }
 }
